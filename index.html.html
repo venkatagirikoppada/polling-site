@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polling Site</title>
+    <style>
+        body {
+            background-color: rgb(241, 168, 72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .main-container {
+            background-color: rgb(252, 252, 251);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 30px;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            animation: pulldown 0.5s ease-out;
+        }
+
+        @keyframes pulldown {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            color: rgb(46, 10, 194);
+            margin: 0 0 20px;
+        }
+
+        .options-container {
+            margin: 20px 0;
+        }
+
+        .option-item {
+            margin: 10px 0;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            display: block;
+            background-color: rgb(255, 146, 146);
+            border-radius: 25px;
+            padding: 15px 25px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        label:hover {
+            transform: scale(1.02);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        label:hover::before {
+            left: 100%;
+        }
+
+        input[type="radio"]:checked + label {
+            background-color: #1abc9c;
+            color: white;
+            animation: select 0.4s ease;
+        }
+
+        @keyframes select {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        button[type="submit"] {
+            background-color: #e74c3c;
+            border-radius: 25px;
+            padding: 12px 30px;
+            margin-top: 20px;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #1abc9c;
+            opacity: 0.3;
+            transition: width 1s ease-in-out;
+        }
+
+        .reset-btn {
+            background-color: #3498db;
+            margin-top: 15px;
+        }
+
+        .reset-btn:hover {
+            background-color: #2980b9;
+        }
+        .footer{
+    font-size: 1em;
+    color:#000000;
+    text-align: center;
+    
+}
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>POLL SYSTEM</h1>
+        <h2>Let's check the language strength</h2>
+        <div class="options-container">
+            <div class="option-item">
+                <input type="radio" name="language" id="javascript">
+                <label class="option" for="javascript">JavaScript</label>
+            </div>
+            <div class="option-item">
+                <input type="radio" name="language" id="python">
+                <label class="option" for="python">Python</label>
+            </div>
+            <div class="option-item">
+                <input type="radio" name="language" id="java">
+                <label class="option" for="java">Java</label>
+            </div>
+            <div class="option-item">
+                <input type="radio" name="language" id="cplus">
+                <label class="option" for="cplus">C++</label>
+            </div>
+        </div>
+        <button type="submit" onclick="submitVote()">Submit Vote</button>
+        <div class="result" id="resultContainer"></div>
+        <footer class="footer">
+            <p>&copy; 2025 Vowel Checker Application. All rights reserved.<br>venkatagiri57re@gmail.com</p>
+        </footer>
+    </div>
+    
+
+    <script>
+        // Initialize votes in localStorage if not exists
+        if(!localStorage.getItem('votes')) {
+            const initialVotes = {
+                javascript: 0,
+                python: 0,
+                java: 0,
+                cplus: 0
+            };
+            localStorage.setItem('votes', JSON.stringify(initialVotes));
+        }
+
+        function submitVote() {
+            const selected = document.querySelector('input[name="language"]:checked');
+            if (!selected) {
+                alert('Please select an option before submitting!');
+                return;
+            }
+
+            const votes = JSON.parse(localStorage.getItem('votes'));
+            votes[selected.id]++;
+            localStorage.setItem('votes', JSON.stringify(votes));
+
+            showResults();
+            disableOptions();
+        }
+
+        function showResults() {
+            const votes = JSON.parse(localStorage.getItem('votes'));
+            const total = Object.values(votes).reduce((a, b) => a + b, 0);
+            const resultContainer = document.getElementById('resultContainer');
+            
+            let html = '<h3>Results:</h3>';
+            for (const [lang, count] of Object.entries(votes)) {
+                const percentage = total === 0 ? 0 : ((count / total) * 100).toFixed(1);
+                html += `
+                    <div class="result-item">
+                        <div class="result-bar" style="width: ${percentage}%"></div>
+                        ${lang.charAt(0).toUpperCase() + lang.slice(1)}: 
+                        ${count} votes (${percentage}%)
+                    </div>
+                `;
+            }
+            
+            html += '<button class="reset-btn" onclick="resetVotes()">Reset Votes</button>';
+            resultContainer.innerHTML = html;
+            resultContainer.style.display = 'block';
+            
+            // Animate result bars
+            setTimeout(() => {
+                document.querySelectorAll('.result-bar').forEach(bar => {
+                    bar.style.width = bar.style.width;
+                });
+            }, 100);
+        }
+
+        function resetVotes() {
+            localStorage.removeItem('votes');
+            const initialVotes = {
+                javascript: 0,
+                python: 0,
+                java: 0,
+                cplus: 0
+            };
+            localStorage.setItem('votes', JSON.stringify(initialVotes));
+            showResults();
+            enableOptions();
+        }
+
+        function disableOptions() {
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.disabled = true;
+            });
+            document.querySelector('button[type="submit"]').disabled = true;
+        }
+
+        function enableOptions() {
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.disabled = false;
+            });
+            document.querySelector('button[type="submit"]').disabled = false;
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('label').forEach(label => {
+                label.style.backgroundColor = 'rgb(255, 146, 146)';
+            });
+        }
+
+        // Show initial results if available
+        window.onload = showResults;
+    </script>
+</body>
+</html>
